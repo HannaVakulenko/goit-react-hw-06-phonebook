@@ -1,23 +1,30 @@
-import PropTypes from 'prop-types';
 import { FilterLabel, FilterLabelWrapper, FilterInput } from './Filter.styled';
 import { BsSearch } from 'react-icons/bs';
 
-export const Filter = ({ value, onChange }) => (
-  <FilterLabel>
-    <FilterLabelWrapper>
-      <BsSearch size="16" />
-      Find contact by name
-    </FilterLabelWrapper>
-    <FilterInput
-      type="text"
-      value={value}
-      onChange={onChange}
-      placeholder="search..."
-    ></FilterInput>
-  </FilterLabel>
-);
+import { useDispatch, useSelector } from 'react-redux';
+import { setFilter } from 'redux/filterSlice';
+import { getFilter } from 'redux/selectors';
 
-Filter.propTypes = {
-  value: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
+export const Filter = () => {
+  const filter = useSelector(getFilter);
+  const dispatch = useDispatch();
+
+  const changeInputValue = e => {
+    dispatch(setFilter(e.target.value.toLowerCase().trim()));
+  };
+
+  return (
+    <FilterLabel>
+      <FilterLabelWrapper>
+        <BsSearch size="16" />
+        Find contact by name
+      </FilterLabelWrapper>
+      <FilterInput
+        type="text"
+        value={filter}
+        onChange={changeInputValue}
+        placeholder="search..."
+      ></FilterInput>
+    </FilterLabel>
+  );
 };

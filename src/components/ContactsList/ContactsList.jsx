@@ -1,12 +1,28 @@
+import { useDispatch, useSelector } from 'react-redux';
 import { DataList, DataItem, BtnDeleteContact } from './ContactsList.styled';
 import { MdDeleteForever } from 'react-icons/md';
 import { Notification } from 'components/Notification/Notification';
-import PropTypes from 'prop-types';
 
-export const ContactsList = ({ contacts, onDeleteContact }) => {
-  return contacts.length > 0 ? (
+import { deleteContact } from 'redux/contactsSlice';
+import { getContacts, getFilter } from 'redux/selectors';
+
+export const ContactsList = () => {
+  const contacts = useSelector(getContacts);
+  const filter = useSelector(getFilter);
+
+  const filteredContacts = contacts?.filter(contact =>
+    contact?.name?.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  const dispatch = useDispatch();
+
+  const onDeleteContact = contactId => {
+    dispatch(deleteContact(contactId));
+  };
+
+  return filteredContacts.length > 0 ? (
     <DataList>
-      {contacts.map(({ name, number, id }) => {
+      {filteredContacts.map(({ name, number, id }) => {
         return (
           <DataItem key={id}>
             <span>{name}:</span>
@@ -22,15 +38,4 @@ export const ContactsList = ({ contacts, onDeleteContact }) => {
   ) : (
     <Notification message="There is no contacts" />
   );
-};
-
-ContactsList.propTypes = {
-  contacts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      number: PropTypes.string.isRequired,
-    }).isRequired
-  ),
-  onDeleteContact: PropTypes.func.isRequired,
 };

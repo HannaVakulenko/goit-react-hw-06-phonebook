@@ -1,6 +1,5 @@
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { nanoid } from 'nanoid';
 import {
   FormField,
   Form,
@@ -9,12 +8,15 @@ import {
   ErrorMessage,
   BtnForm,
 } from './ContactsForm.styled';
-import PropTypes from 'prop-types';
 import {
   BsFillPersonPlusFill,
   BsPersonFill,
   BsFillTelephoneFill,
 } from 'react-icons/bs';
+import { useSelector, useDispatch } from 'react-redux';
+import { addContact } from '../../redux/contactsSlice';
+import { getContacts } from '../../redux/selectors';
+import { toast } from 'react-hot-toast';
 
 const ContactsSchema = Yup.object().shape({
   name: Yup.string()
@@ -33,7 +35,30 @@ const ContactsSchema = Yup.object().shape({
     .required('Required field!'),
 });
 
-export const ContactsForm = ({ onAddContact }) => {
+export const ContactsForm = () => {
+  const contacts = useSelector(getContacts);
+
+  const dispatch = useDispatch();
+
+  const isDuplicatedContact = ({ name, number }) => {
+    const normalizedName = name.toLowerCase().trim();
+    const normalizedNumber = number.trim();
+
+    const duplicatedContact = contacts.find(
+      contact =>
+        contact.name.toLowerCase().trim === normalizedName ||
+        contact.number.trim() === normalizedNumber
+    );
+    return Boolean(duplicatedContact);
+  };
+
+  const onAddContact = ({ name, number }) => {
+    if (isDuplicatedContact({ name, number })) {
+      return toast.error('Please enter something');
+    }
+    dispatch(addContact({ name, number }));
+  };
+
   return (
     <Formik
       initialValues={{
@@ -42,7 +67,7 @@ export const ContactsForm = ({ onAddContact }) => {
       }}
       validationSchema={ContactsSchema}
       onSubmit={(values, actions) => {
-        onAddContact({ id: nanoid(), ...values });
+        onAddContact({ ...values });
         actions.resetForm();
       }}
     >
@@ -53,13 +78,7 @@ export const ContactsForm = ({ onAddContact }) => {
             Name
           </FormFieldWrapper>
 
-          <FieldStyled
-            tupe="text"
-            name="name"
-            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-            required
-          />
+          <FieldStyled type="text" name="name" placeholder="Name" />
           <ErrorMessage name="name" component="div" />
         </FormField>
         <FormField htmlFor="number">
@@ -71,9 +90,7 @@ export const ContactsForm = ({ onAddContact }) => {
           <FieldStyled
             type="tel"
             name="number"
-            pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-            title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-            required
+            placeholder="+38-XXX-XXX-XX-XX"
           />
           <ErrorMessage name="number" component="div" />
         </FormField>
@@ -84,8 +101,4 @@ export const ContactsForm = ({ onAddContact }) => {
       </Form>
     </Formik>
   );
-};
-
-ContactsForm.propType = {
-  onSubmit: PropTypes.func.isRequired,
 };
